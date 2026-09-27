@@ -38,6 +38,42 @@ pop(6.72, 880, 660, 0.18, 0.14);
 buzz(7.35, 0.36, 0.09); buzz(7.85, 0.3, 0.09);
 whoosh(8.34, 0.26, 0.16);
 
+function thud(t0, vol) { // stamp / landing
+  add(t0, 0.5, t => vol * (Math.sin(2 * Math.PI * (70 + 60 * Math.exp(-t * 20)) * t) * Math.exp(-t * 9) + 0.5 * rnd() * Math.exp(-t * 40)));
+}
+function chime(t0, vol, f = 1320) { add(t0, 1.4, t => vol * Math.exp(-t * 3) * (Math.sin(2 * Math.PI * f * t) + 0.5 * Math.sin(2 * Math.PI * f * 1.5 * t) + 0.25 * Math.sin(2 * Math.PI * f * 2 * t)) / 1.75); }
+function tick(t0, vol) { add(t0, 0.03, t => vol * rnd() * Math.exp(-t * 250)); }
+function tone(t0, len, f0, f1, vol) { add(t0, len, t => { const e = Math.min(1, t / 0.01, (len - t) / 0.03); return vol * e * Math.sin(2 * Math.PI * (f0 + (f1 - f0) * t / len / 2) * t); }); }
+function dtmf(t0, a, b, vol, len = 0.1) { add(t0, len, t => { const e = Math.min(1, t / 0.005, (len - t) / 0.01); return vol * e * (Math.sin(2 * Math.PI * a * t) + Math.sin(2 * Math.PI * b * t)) / 2; }); }
+function scribble(t0, len, vol) { let lp = 0; add(t0, len, t => { lp += 0.35 * (rnd() - lp); return vol * lp * (0.6 + 0.4 * Math.sin(t * 150)) * Math.min(1, (len - t) / 0.04); }); }
+
+// full episode (cues past the render length are simply dropped by add())
+whoosh(9.82, 0.3, 0.18); thud(10.12, 0.3);
+thud(10.84, 0.4);
+pop(11.6, 600, 900, 0.18); pop(11.66, 700, 1000, 0.16); pop(11.72, 800, 1100, 0.16);
+for (let i = 0; i < 4; i++) tone(11.62 + i * 0.26, 0.22, i % 2 ? 620 : 820, i % 2 ? 620 : 820, 0.05);
+thud(13.1, 0.4);
+pop(14.2, 1200, 1200, 0.12, 0.06); pop(14.32, 1200, 1200, 0.12, 0.06);
+scribble(15.8, 0.34, 0.2);
+for (let x = 16.62; x < 18.4; x += 0.09) tick(x, 0.2);
+drone(18.5, 1.6, 0.08); whoosh(18.5, 0.6, 0.12);
+for (let x = 21.0; x < 21.66; x += 0.05) tick(x, 0.14);
+pop(22.05, 500, 700, 0.2); whoosh(22.1, 0.9, 0.14); chime(22.5, 0.18, 1175); tone(23.1, 0.6, 420, 200, 0.12);
+whoosh(23.7, 0.6, 0.18); scribble(24.1, 0.22, 0.26); thud(24.46, 0.4); thud(25.62, 0.34);
+drone(25.92, 2.3, 0.06);
+pop(28.46, 700, 1100, 0.14); pop(29.62, 500, 800, 0.16); pop(30.3, 900, 1200, 0.1); pop(30.54, 500, 800, 0.16);
+scribble(31.6, 0.6, 0.06); scribble(32.6, 0.25, 0.2);
+pop(33.4, 700, 1100, 0.14); pop(34.68, 600, 900, 0.12); pop(38.0, 600, 900, 0.12); pop(40.06, 600, 900, 0.12);
+scribble(37.3, 0.45, 0.2); scribble(39.3, 0.45, 0.2); scribble(41.1, 0.45, 0.2);
+for (const x of [41.7, 42.25, 42.8]) buzz(x, 0.4, 0.13);
+tone(42.96, 0.12, 700, 700, 0.12); tone(43.1, 0.2, 520, 520, 0.12);
+chime(43.62, 0.14, 988);
+dtmf(44.96, 697, 1209, 0.12); dtmf(45.08, 852, 1477, 0.12); dtmf(45.2, 697, 1477, 0.12); dtmf(45.32, 941, 1336, 0.12);
+chime(45.9, 0.1, 880);
+for (let x = 46.7; x < 48.6; x += 0.6) buzz(x, 0.4, 0.07);
+tone(48.64, 0.12, 700, 700, 0.12); tone(48.78, 0.2, 520, 520, 0.12);
+whoosh(49.6, 0.5, 0.14); chime(49.72, 0.14, 1047); chime(50.82, 0.2, 1568);
+
 let peak = 0; for (const v of buf) peak = Math.max(peak, Math.abs(v));
 const g = peak > 0.95 ? 0.95 / peak : 1, out = Buffer.alloc(44 + N * 2);
 out.write('RIFF', 0); out.writeUInt32LE(36 + N * 2, 4); out.write('WAVEfmt ', 8); out.writeUInt32LE(16, 16); out.writeUInt16LE(1, 20); out.writeUInt16LE(1, 22);
