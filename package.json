@@ -1,0 +1,9 @@
+{
+  "name": "storybook-shorts",
+  "private": true,
+  "description": "Faceless YouTube Shorts rendered frame by frame with Canvas 2D",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.9"
+  }
+}
