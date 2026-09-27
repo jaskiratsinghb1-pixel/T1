@@ -367,7 +367,9 @@ function blurredRoom() { // soft background behind the phone in POV shots
   if (BG) return BG;
   const a = createCanvas(W, H), x = a.getContext('2d');
   x.translate(540, 960); x.scale(1.5, 1.5); x.translate(-540, -760); room(x, { dusk: true, lamp: true, clockMin: 458 });
-  BG = createCanvas(W, H); const y = BG.getContext('2d'); y.filter = 'blur(18px)'; y.drawImage(a, 0, 0); y.filter = 'none';
+  BG = createCanvas(W, H); const y = BG.getContext('2d');
+  y.fillStyle = C.wall; y.fillRect(0, 0, W, H); // opaque base: the blur fades the edges to transparent
+  y.filter = 'blur(18px)'; y.drawImage(a, -60, -60, W + 120, H + 120); y.filter = 'none';
   y.fillStyle = 'rgba(40,34,60,0.18)'; y.fillRect(0, 0, W, H);
   return BG;
 }
@@ -458,6 +460,7 @@ function shotOfficer(ctx, t) { // 8.2 - : the officer talks; ID card for "CBI"
 }
 function renderScene(ctx, t) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); view.z = 1;
+  ctx.fillStyle = C.wall; ctx.fillRect(0, 0, W, H); // never let a previous frame show through
   if (t < 2.8) shotCall(ctx, t);
   else if (t < 6.3) shotArrest(ctx, t, t, false);
   else if (t < 6.66) { shotArrest(ctx, t, lerp(6.3, 2.9, seg(t, 6.3, 6.66, E.io)), true); rewindFX(ctx, t); }
