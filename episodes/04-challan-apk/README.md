@@ -1,6 +1,10 @@
 # Episode 04 — fake e-challan APK ("RTO Challan.apk")
 
-**Status:** concept + script. Waiting for the voiceover; then 10 s preview first, full episode after approval.
+**Status:** complete.
+- `deliverables/ep04-challan-apk-full.mp4` — 68.6 s, 1080×1920, 30 fps, VO + SFX + captions, FishyFiles end card from 64.2 s, about −14.6 LUFS
+- `deliverables/ep04-challan-apk-preview-10s.mp4` — first 10 s
+
+The supplied VO runs 68.0 s (longer than the 46–49 s planned); the edit follows it as recorded.
 
 ## Why this one
 - Very common right now: a WhatsApp/SMS "traffic challan pending" message with an `.apk` attached. Installing it gives the scammer SMS access, so every OTP goes to them.
@@ -48,4 +52,12 @@
 12. **CTA end card** (`lib/cta.js`, 3.6 s): FishyFiles logo, wordmark, tagline "Har scam ki file, yahin khulti hai.", Follow pill → Following.
 
 ## Build
-Same as Episode 03: `episodes/04-challan-apk/build.sh preview|full|stills`, with the CTA card appended after the last VO line (to be added once the VO arrives).
+Requires Node 20+ and ffmpeg; `npm install` once at the repo root.
+```sh
+episodes/04-challan-apk/build.sh full           # -> deliverables/ep04-challan-apk-full.mp4 (~3.5 min)
+episodes/04-challan-apk/build.sh preview        # -> first 10 s
+episodes/04-challan-apk/build.sh stills 90,900  # -> anim/out/*.png
+```
+- `anim/ep04.js` — Rohan, sets, phone screens, shots, captions; the end card comes from `lib/cta.js`
+- `anim/sfx.js` — synthesised SFX cues for this VO
+- `audio/vo.wav` — supplied voiceover
