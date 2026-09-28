@@ -4,6 +4,8 @@
 - `deliverables/ep04-challan-apk-full.mp4` — 68.6 s, 1080×1920, 30 fps, VO + SFX + captions, FishyFiles end card from 64.2 s, about −14.6 LUFS
 - `deliverables/ep04-challan-apk-preview-10s.mp4` — first 10 s
 
+Character pass (v2): Rohan redrawn in the reference proportions (round head, simple hair cap, V-neck, arms that follow the reach so they hug the body); phone close-ups use only two caricature hands — both grip, or the left grips while the right fist points and taps; real FishyFiles logo on the end card.
+
 The supplied VO runs 68.0 s (longer than the 46–49 s planned); the edit follows it as recorded.
 
 ## Why this one

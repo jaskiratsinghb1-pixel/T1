@@ -3,7 +3,7 @@
 //        node ep04.js 30,150,240       -> PNG stills in anim/out/
 const fs = require('fs'), path = require('path');
 const D = require('../../../lib/doll.js');
-const { drawCTA } = require('../../../lib/cta.js');
+const { drawCTA, ready: ctaReady } = require('../../../lib/cta.js');
 const { createCanvas, INK, view, clamp, lerp, lerp2, E, seg, pulse, rng, dk, mix, shape, line, ell, arcP, rr, sup, spl, blob, text, sleeve, hand, armPose, HX, SK, trace, chip, stamp, penPath, penEllipse, star, starsAround } = D;
 
 const W = 1080, H = 1920, FPS = 30;
@@ -131,24 +131,23 @@ const mkRo = o => ({ fx: 0, look: [0, 0.3], eyes: 'open', mouth: 'smile', brow: 
 function roHead(ctx, s) {
   const fx = s.fx * 12;
   for (const sx of [-1, 1]) {
-    const ex = sx * 104 - s.fx * 5;
-    SK(ctx, ell(ex, 14, 18, 25), C.skin);
-    line(ctx, arcP(ex - sx * 2, 14, 9, sx > 0 ? -1.3 : Math.PI - 1.3, sx > 0 ? 1.3 : Math.PI + 1.3, 10), { lwk: 0.7 });
+    const ex = sx * 100 - s.fx * 5;
+    SK(ctx, ell(ex, 14, 17, 23), C.skin);
+    line(ctx, arcP(ex - sx * 2, 14, 8, sx > 0 ? -1.3 : Math.PI - 1.3, sx > 0 ? 1.3 : Math.PI + 1.3, 10), { lwk: 0.7 });
   }
-  const face = sup(0, 6, 104, 112, 2.4, 0.08);
+  const face = sup(0, 4, 100, 108, 2.15, 0.06);
   SK(ctx, face, C.skin);
-  const r = rng(41); ctx.fillStyle = 'rgba(42,33,29,0.22)'; // light stubble
-  for (let i = 0; i < 34; i++) { const a = 0.45 + r() * 2.25, d = 0.8 + r() * 0.14; ctx.beginPath(); ctx.arc(fx * 0.5 + Math.cos(a) * 88 * d, 22 + Math.sin(a) * 88 * d, 1.9, 0, 7); ctx.fill(); }
-  HX(ctx, spl([[-110, 6], [-116, -52], [-90, -104], [-40, -128], [10, -140], [52, -168], [96, -150], [104, -112], [112, -60], [110, 6], [98, -34], [62, -58], [24, -46], [-16, -62], [-60, -52], [-96, -26]], true, 5), { fill: C.hair });
-  line(ctx, spl([[18, -128], [52, -154], [86, -142]], false), { col: '#5A4A42', lwk: 0.8 });
-  for (const sx of [-1, 1]) blob(ctx, sx * 64 + fx, 42, 21, 12, C.blush);
+  // simple rounded hair cap with a soft side fringe (reference-style), no tall quiff
+  HX(ctx, spl([[-104, 2], [-110, -46], [-88, -96], [-44, -120], [8, -126], [58, -116], [94, -86], [110, -40], [106, 2], [98, -28], [72, -44], [36, -38], [4, -54], [-26, -44], [-58, -52], [-84, -38], [-98, -20]], true, 5), { fill: C.hair });
+  line(ctx, spl([[-50, -104], [-10, -114], [30, -110]], false), { col: '#5A4A42', lwk: 0.7 });
+  for (const sx of [-1, 1]) blob(ctx, sx * 62 + fx, 42, 21, 12, C.blush);
   for (const sx of [-1, 1]) { // brows: worry tilts both, raise lifts one (the smirk)
     const up = s.brow + (sx > 0 ? s.raise * 10 : 0);
-    ctx.save(); ctx.translate(sx * 40 + fx, -30 - up); ctx.rotate(sx * 0.24 * s.worry - (sx > 0 ? s.raise * 0.15 : 0));
-    shape(ctx, rr(-25, -7, 50, 14, 7), { fill: C.hair, lwk: 0.6 }); ctx.restore();
+    ctx.save(); ctx.translate(sx * 38 + fx, -24 - up); ctx.rotate(sx * 0.24 * s.worry - (sx > 0 ? s.raise * 0.15 : 0));
+    shape(ctx, rr(-21, -5, 42, 10, 5), { fill: C.hair, lwk: 0.6 }); ctx.restore();
   }
   for (const sx of [-1, 1]) {
-    const ex = sx * 40 + fx, ey = 4, e = s.eyes;
+    const ex = sx * 38 + fx, ey = 6, e = s.eyes;
     if (e === 'happy') line(ctx, arcP(ex, ey + 6, 13, Math.PI + 0.35, 2 * Math.PI - 0.35, 12), { lwk: 1.25 });
     else if (e === 'sleep') line(ctx, arcP(ex, ey - 6, 13, 0.4, Math.PI - 0.4, 12), { lwk: 1.2 });
     else if (e === 'blink') line(ctx, [[ex - 13, ey], [ex + 13, ey]], { lwk: 1.1 });
@@ -157,41 +156,43 @@ function roHead(ctx, s) {
       shape(ctx, eye, { fill: C.white, stroke: false });
       const qx = ex + s.look[0] * (wide ? 2 : 5), qy = ey + s.look[1] * (wide ? 2 : 5) + (e === 'sly' ? 3 : 0);
       blob(ctx, qx, qy, pr, pr, INK); blob(ctx, qx + pr * 0.35, qy - pr * 0.4, pr * 0.32, pr * 0.32, C.white);
-      if (e === 'sly') { // lowered lids: knowing look
+      if (e === 'sly') {
         ctx.save(); ctx.beginPath(); trace(ctx, eye, true); ctx.clip(); ctx.fillStyle = C.skin; ctx.fillRect(ex - 20, ey - 22, 40, 20); ctx.restore();
         shape(ctx, eye, { lwk: 0.9 }); line(ctx, [[ex - 17, ey - 2], [ex + 17, ey - 2]], { lwk: 1.2 });
       } else shape(ctx, eye, { lwk: 0.9 });
     }
   }
-  line(ctx, spl([[fx + 2, 20], [fx - 9, 38], [fx + 1, 46], [fx + 11, 42]], false), { lwk: 0.9 });
+  line(ctx, spl([[fx + 3, 22], [fx - 7, 38], [fx + 1, 45], [fx + 9, 42]], false), { lwk: 0.9 });
   const m = s.mouth;
   if (m === 'grin') {
-    const M = spl([[-34, 62], [34, 62], [26, 86], [0, 96], [-26, 86]]).map(([x, y]) => [x + fx, y]);
+    const M = spl([[-32, 62], [32, 62], [24, 84], [0, 94], [-24, 84]]).map(([x, y]) => [x + fx, y]);
     shape(ctx, M, { fill: C.mouth, stroke: false });
-    ctx.save(); ctx.beginPath(); trace(ctx, M, true); ctx.clip(); ctx.fillStyle = C.white; ctx.fillRect(-40 + fx, 56, 80, 12); blob(ctx, fx, 94, 18, 9, C.tongue); ctx.restore();
+    ctx.save(); ctx.beginPath(); trace(ctx, M, true); ctx.clip(); ctx.fillStyle = C.white; ctx.fillRect(-40 + fx, 56, 80, 12); blob(ctx, fx, 92, 16, 8, C.tongue); ctx.restore();
     shape(ctx, M);
-  } else if (m === 'o') shape(ctx, ell(fx, 80, 13, 16), { fill: C.mouth });
-  else if (m === 'worried') line(ctx, Array.from({ length: 11 }, (_, i) => [fx - 20 + i * 4, 78 + 3 * Math.sin(i * 1.5)]), { lwk: 0.95 });
-  else if (m === 'flat') line(ctx, [[fx - 18, 78], [fx + 18, 78]], { lwk: 1 });
-  else if (m === 'smirk') line(ctx, spl([[fx - 22, 78], [fx + 2, 80], [fx + 20, 72], [fx + 28, 62]], false), { lwk: 1 });
-  else if (m === 'sleep') shape(ctx, ell(fx, 80, 7, 8), { fill: C.mouth });
-  else line(ctx, arcP(fx, 46, 30, 0.5, Math.PI - 0.5, 14), { lwk: 1 });
-  if (s.glow > 0) { ctx.save(); ctx.beginPath(); trace(ctx, face, true); ctx.clip(); ctx.fillStyle = `rgba(150,195,255,${0.22 * s.glow})`; ctx.fillRect(-130, -130, 260, 270); ctx.restore(); }
+  } else if (m === 'o') shape(ctx, ell(fx, 78, 12, 15), { fill: C.mouth });
+  else if (m === 'worried') line(ctx, Array.from({ length: 11 }, (_, i) => [fx - 20 + i * 4, 76 + 3 * Math.sin(i * 1.5)]), { lwk: 0.95 });
+  else if (m === 'flat') line(ctx, [[fx - 16, 76], [fx + 16, 76]], { lwk: 1 });
+  else if (m === 'smirk') line(ctx, spl([[fx - 20, 76], [fx + 2, 78], [fx + 18, 70], [fx + 26, 60]], false), { lwk: 1 });
+  else if (m === 'sleep') shape(ctx, ell(fx, 78, 7, 8), { fill: C.mouth });
+  else line(ctx, arcP(fx, 46, 28, 0.5, Math.PI - 0.5, 14), { lwk: 1 });
+  if (s.glow > 0) { ctx.save(); ctx.beginPath(); trace(ctx, face, true); ctx.clip(); ctx.fillStyle = `rgba(150,195,255,${0.2 * s.glow})`; ctx.fillRect(-130, -130, 260, 270); ctx.restore(); }
   if (s.sweat > 0) {
-    ctx.save(); ctx.globalAlpha = clamp(s.sweat * 4); const y = -56 + 40 * s.sweat;
-    shape(ctx, spl([[98, y - 24], [110, y + 2], [98, y + 13], [86, y + 2]]), { fill: '#CFEAF7', lwk: 0.8 }); ctx.restore();
+    ctx.save(); ctx.globalAlpha = clamp(s.sweat * 4); const y = -52 + 40 * s.sweat;
+    shape(ctx, spl([[96, y - 24], [108, y + 2], [96, y + 13], [84, y + 2]]), { fill: '#CFEAF7', lwk: 0.8 }); ctx.restore();
   }
 }
+
 function roBody(ctx, s) {
-  SK(ctx, rr(-30, -44, 60, 56, 12), C.skin);
-  const T = spl([[-100, -6], [0, -12], [100, -6], [176, 40], [188, 420], [-188, 420], [-176, 40]]);
+  SK(ctx, rr(-28, -44, 56, 56, 12), C.skin);
+  // V-neck sweater: sloped shoulders, gentle taper (reference proportions)
+  const T = spl([[-92, -8], [0, -12], [92, -8], [130, 26], [140, 200], [146, 430], [-146, 430], [-140, 200], [-130, 26]]);
   HX(ctx, T, { fill: C.tee });
-  ctx.save(); ctx.beginPath(); trace(ctx, T, true); ctx.clip(); ctx.fillStyle = C.stripe; ctx.fillRect(-200, 150, 400, 34); ctx.restore();
-  shape(ctx, T);
-  line(ctx, [[-190, 150], [190, 150]], { lwk: 0.6 }); line(ctx, [[-190, 184], [190, 184]], { lwk: 0.6 });
-  line(ctx, arcP(0, -30, 46, 0.35, Math.PI - 0.35, 12), { lwk: 1.1 });
-  ctx.save(); ctx.translate(0, -18 + s.nod); ctx.rotate(s.tilt); ctx.translate(0, -118); roHead(ctx, s); ctx.restore();
+  shape(ctx, [[-36, -10], [36, -10], [0, 52]], { fill: C.skin, stroke: false });
+  line(ctx, [[-40, -9], [0, 58], [40, -9]], { col: C.teeDk, lwk: 3.2 });
+  line(ctx, [[-40, -9], [0, 58], [40, -9]], { lwk: 1 });
+  ctx.save(); ctx.translate(0, -18 + s.nod); ctx.rotate(s.tilt); ctx.translate(0, -114); roHead(ctx, s); ctx.restore();
 }
+
 function helmet(ctx, x, y, s) { // full-face scooter helmet, visor to camera
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
   HX(ctx, spl([[-92, 60], [-100, -10], [-70, -76], [0, -98], [70, -76], [100, -10], [92, 60], [60, 76], [-60, 76]]), { fill: C.helmet });
@@ -209,11 +210,15 @@ function phoneBack(ctx, x, y, glow) {
   for (const dy of [-84, -54]) shape(ctx, ell(x - 27, y + dy, 11, 11), { fill: '#4E5566', lwk: 0.5 });
 }
 function roArms(ctx, s, t) {
-  const T = s.hold === 'phone' ? [[-72, 206], [72, 206]] : s.hold === 'helmet' ? [[-104, 250], [104, 250]] : [[-150, 404], [150, 404]];
-  const arms = [[-1, T[0]], [1, T[1]]].map(([sx, tg]) => armPose(ctx, [sx * 118, 48], tg, ...(s.hold === 'desk' ? [190, 180] : [138, 130]), sx, 60, C.tee, C.teeDk)); // shorter reach when holding something at the chest, so elbows stay close
-  if (s.hold === 'phone') phoneBack(ctx, 0, 150, s.glow);
-  if (s.hold === 'helmet') helmet(ctx, 0, 200, 1.05);
-  arms.forEach(a => hand(ctx, a, 28, C.skin, s.hold === 'desk' ? 'flat' : undefined));
+  const T = s.hold === 'phone' ? [[-56, 222], [56, 222]] : s.hold === 'helmet' ? [[-98, 258], [98, 258]] : [[-134, 404], [134, 404]];
+  const arms = [[-1, T[0]], [1, T[1]]].map(([sx, tg]) => {
+    const sh = [sx * 100, 40], d = Math.hypot(tg[0] - sh[0], tg[1] - sh[1]);
+    // limb lengths follow the reach, so arms stay close to the body with a soft elbow (never a wide bend)
+    return armPose(ctx, sh, tg, d * 0.56, d * 0.54, sx, 54, C.tee, C.teeDk);
+  });
+  if (s.hold === 'phone') { ctx.save(); ctx.translate(0, 176); ctx.scale(0.78, 0.78); phoneBack(ctx, 0, 0, s.glow); ctx.restore(); }
+  if (s.hold === 'helmet') helmet(ctx, 0, 200, 1.0);
+  arms.forEach(a => hand(ctx, a, 27, C.skin, s.hold === 'desk' ? 'flat' : undefined));
   if (s.buzz > 0 && s.hold === 'phone') { ringArcs(ctx, -80, 60, t, s.buzz, -1); ringArcs(ctx, 80, 60, t, s.buzz, 1); }
 }
 
@@ -311,22 +316,7 @@ function otpBubble(ctx, x, y, s, a, code) {
 }
 
 // ================= PHONE POV =================
-function thumb(ctx, p, ang, skin) {
-  ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(ang);
-  shape(ctx, rr(-20, -30, 150, 60, 30), { fill: skin, hatch: dk(skin, 0.25), ha: 0.14 });
-  shape(ctx, rr(94, -19, 30, 38, 13), { fill: mix(skin, '#FFFFFF', 0.45), lwk: 0.6 });
-  line(ctx, [[58, -18], [62, 0], [58, 18]], { col: dk(skin, 0.35), lwk: 0.6 });
-  ctx.restore();
-}
-function finger(ctx, x, y, k) { // index finger tapping from below-right
-  if (k <= 0.01) return;
-  ctx.save(); ctx.translate(x + 40 * (1 - k), y + 420 * (1 - k)); ctx.rotate(-0.35);
-  sleeve(ctx, [[60, 760], [40, 480], [10, 200]], 150, C.tee, C.teeDk);
-  shape(ctx, rr(-70, 120, 150, 170, 60), { fill: C.skin, hatch: dk(C.skin, 0.25), ha: 0.14 });
-  shape(ctx, rr(-28, -10, 58, 170, 29), { fill: C.skin, hatch: dk(C.skin, 0.25), ha: 0.14 });
-  shape(ctx, rr(-16, 0, 34, 36, 13), { fill: mix(C.skin, '#FFFFFF', 0.45), lwk: 0.6 });
-  ctx.restore();
-}
+
 let BG = null;
 function blurredRoom() {
   if (BG) return BG;
@@ -339,15 +329,31 @@ function blurredRoom() {
   y.fillStyle = 'rgba(40,50,70,0.12)'; y.fillRect(0, 0, W, H); y.getImageData(0, 0, 1, 1);
   return BG;
 }
-function phoneRig(ctx, t, o) { // Rohan's POV: phone in both hands
+// caricature hands for the phone close-ups: plain rounded shapes, no nails or knuckle lines
+function gripThumb(ctx, p, ang, skin) {
+  ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(ang);
+  shape(ctx, rr(-14, -34, 128, 68, 34), { fill: skin, hatch: dk(skin, 0.25), ha: 0.14 });
+  ctx.restore();
+}
+function pointerHand(ctx, tip, ang, skin, sleeveCol, sleeveDk) { // fist with one rounded pointing finger; tip = fingertip
+  ctx.save(); ctx.translate(tip[0], tip[1]); ctx.rotate(ang);
+  sleeve(ctx, [[40, 900], [30, 600], [14, 300]], 150, sleeveCol, sleeveDk);
+  shape(ctx, spl([[-80, 190], [-60, 132], [0, 118], [70, 136], [96, 200], [80, 270], [10, 292], [-60, 268]]), { fill: skin, hatch: dk(skin, 0.25), ha: 0.14 });
+  shape(ctx, rr(-28, 0, 56, 176, 28), { fill: skin, hatch: dk(skin, 0.25), ha: 0.14 });
+  shape(ctx, rr(-104, 170, 110, 56, 28).map(([x, y]) => [x, y]), { fill: skin, hatch: dk(skin, 0.25), ha: 0.14 }); // thumb tucked across the fist
+  ctx.restore();
+}
+function phoneRig(ctx, t, o) { // Rohan's POV. Two hands only: both grip the phone, or the left grips while the right points and taps.
   ctx.drawImage(blurredRoom(), 0, 0);
   if (o.dark) { ctx.fillStyle = `rgba(16,18,40,${o.dark})`; ctx.fillRect(0, 0, W, H); }
-  const z = o.z, ty = o.target + 60 * z;
-  ctx.save(); ctx.translate(540 + (o.shake || 0), ty); ctx.scale(z, z); ctx.rotate(-0.02 + 0.008 * Math.sin(t * 1.3));
+  const z = o.z, ty = o.target + 60 * z, one = !!o.point;
+  ctx.save(); ctx.translate(540 + (o.shake || 0), ty); ctx.scale(z, z); ctx.rotate((one ? -0.05 : -0.02) + 0.008 * Math.sin(t * 1.3));
   const aL = sleeve(ctx, [[-470, 1150], [-420, 760], [-300, 470]], 170, C.tee, C.teeDk);
-  const aR = sleeve(ctx, [[470, 1150], [430, 720], [300, 400]], 170, C.tee, C.teeDk);
-  const palm = a => [a.w[0] + Math.cos(a.dir) * 40, a.w[1] + Math.sin(a.dir) * 40], pL = palm(aL), pR = palm(aR);
-  for (const p of [pL, pR]) shape(ctx, ell(p[0], p[1], 92, 86), { fill: C.skin, hatch: dk(C.skin, 0.25), ha: 0.14 });
+  const palm = a => [a.w[0] + Math.cos(a.dir) * 40, a.w[1] + Math.sin(a.dir) * 40], pL = palm(aL);
+  let pR = null;
+  if (!one) { const aR = sleeve(ctx, [[470, 1150], [430, 720], [300, 400]], 170, C.tee, C.teeDk); pR = palm(aR); }
+  shape(ctx, ell(pL[0], pL[1], 96, 90), { fill: C.skin, hatch: dk(C.skin, 0.25), ha: 0.14 });
+  if (pR) shape(ctx, ell(pR[0], pR[1], 96, 90), { fill: C.skin, hatch: dk(C.skin, 0.25), ha: 0.14 });
   shape(ctx, rr(-280, -560, 560, 1120, 64), { fill: C.phone });
   const scr = rr(-252, -532, 504, 1064, 42);
   ctx.save(); ctx.beginPath(); trace(ctx, scr, true); ctx.clip(); o.screen(ctx);
@@ -355,14 +361,18 @@ function phoneRig(ctx, t, o) { // Rohan's POV: phone in both hands
   ctx.restore();
   shape(ctx, scr, { lwk: 0.6 });
   ctx.fillStyle = '#55555C'; ctx.fillRect(-60, -548, 120, 12);
-  thumb(ctx, pL, -1.35, C.skin); thumb(ctx, pR, -Math.PI + 1.35, C.skin);
+  gripThumb(ctx, pL, -1.3, C.skin); if (pR) gripThumb(ctx, pR, -Math.PI + 1.3, C.skin);
   if (o.buzz > 0) { ringArcs(ctx, -300, -470, t, o.buzz, -1); ringArcs(ctx, 300, -470, t, o.buzz, 1); }
-  if (o.tap) finger(ctx, o.tap[0], o.tap[1], o.tap[2]);
+  if (one) { // right hand rests below the screen, then the finger travels to the button and presses
+    const rest = [250, 470], k = o.point.k, tip = [lerp(rest[0], o.point.tgt[0], k), lerp(rest[1], o.point.tgt[1], k) - 30 * Math.sin(Math.PI * k)];
+    pointerHand(ctx, tip, -0.42 + 0.1 * k, C.skin, C.tee, C.teeDk);
+  }
   if (o.top) o.top(ctx);
   ctx.restore();
   if (o.vig > 0) vignette(ctx, 0.5 * o.vig);
   if (o.after) o.after(ctx);
 }
+
 const tapK = (t, t0) => seg(t, t0 - 0.35, t0 - 0.05, E.o) * (1 - seg(t, t0 + 0.25, t0 + 0.55, E.io)); // finger in, tap, out
 function ripple(ctx, x, y, t, t0, col = 'rgba(255,255,255,0.8)') {
   if (t < t0 || t > t0 + 0.4) return;
@@ -586,11 +596,11 @@ function shotChat(ctx, t) { // 8.0-15.9
   phoneRig(ctx, t, { z: 1.22 + 0.1 * seg(t, 8.0, 15.9, x => x), target: 790, screen: c => waChat(c, t), shake: t > 10.96 && t < 11.3 ? 4 * Math.sin(t * 90) : 0 });
 }
 function shotInstall(ctx, t) { // 15.9-18.4
-  phoneRig(ctx, t, { z: 1.25, target: 790, screen: c => installScreen(c, t), tap: [112, 440, tapK(t, 16.96)] });
+  phoneRig(ctx, t, { z: 1.25, target: 790, screen: c => installScreen(c, t), point: { tgt: [110, 420], k: tapK(t, 16.96) } });
 }
 function shotPerm(ctx, t) { // 18.4-23.5
   const k = seg(t, 18.4, 22.0, E.io);
-  phoneRig(ctx, t, { z: lerp(1.25, 1.5, k), target: lerp(790, 740, k), screen: c => permScreen(c, t), tap: [0, 40, tapK(t, 22.18)], vig: seg(t, 21.4, 22.1) * 0.7 });
+  phoneRig(ctx, t, { z: lerp(1.25, 1.5, k), target: lerp(790, 740, k), screen: c => permScreen(c, t), point: { tgt: [0, 20], k: tapK(t, 22.18) }, vig: seg(t, 21.4, 22.1) * 0.7 });
 }
 function shotNight(ctx, t) { // 23.5-28.4
   const ro = mkRo({ eyes: 'sleep', mouth: 'sleep', look: [0, 0] });
@@ -694,8 +704,8 @@ function shotRule(ctx, t) { // 40.5-49.6
   chip(ctx, 540, lerp(1000, 360, mv), 'RULE', popIn(t, 40.64) * lerp(1.6, 1, mv), C.green, 70);
 }
 function shotUninstall(ctx, t) { // 49.6-53.3
-  const tp = t < 51.95 ? [150, -40, tapK(t, 51.72)] : [0, 125, tapK(t, 52.08)];
-  phoneRig(ctx, t, { z: 1.2, target: 800, screen: c => settingsScreen(c, t), tap: tp });
+  const pt = t < 51.95 ? { tgt: [155, -53], k: tapK(t, 51.72) } : { tgt: [0, 110], k: tapK(t, 52.08) };
+  phoneRig(ctx, t, { z: 1.2, target: 800, screen: c => settingsScreen(c, t), point: pt });
 }
 function shotOops(ctx, t) { // 53.3-55.1: "Galti ho gayi?"
   const ro = rohanPhone(t, { eyes: 'open', mouth: 'worried', worry: 1, brow: 6, look: [0, 0.8], sweat: seg(t, 53.4, 54.4, x => x) });
@@ -795,6 +805,7 @@ const arg = process.argv[2] || 'all';
 if (arg === 'all') {
   const NF = Math.round(parseFloat(process.argv[3] || '10') * FPS);
   (async () => {
+    await ctaReady;
     for (let f = 0; f < NF; f++) {
       renderFrame(f);
       const buf = Buffer.from(octx.getImageData(0, 0, W, H).data.buffer);
@@ -803,5 +814,5 @@ if (arg === 'all') {
   })();
 } else {
   fs.mkdirSync(path.join(__dirname, 'out'), { recursive: true });
-  for (const f of arg.split(',').map(Number)) { renderFrame(f); fs.writeFileSync(path.join(__dirname, 'out', `f${String(f).padStart(4, '0')}.png`), out.toBuffer('image/png')); }
+  ctaReady.then(() => { for (const f of arg.split(',').map(Number)) { renderFrame(f); fs.writeFileSync(path.join(__dirname, 'out', `f${String(f).padStart(4, '0')}.png`), out.toBuffer('image/png')); } });
 }
