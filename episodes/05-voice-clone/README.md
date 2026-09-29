@@ -1,6 +1,10 @@
 # Episode 05 — AI voice-clone "Papa, mujhe bachao" call
 
-**Status:** concept + script. Waiting for the voiceover; then a 10 s preview, then the full episode with the FishyFiles end card.
+**Status:** complete.
+- `deliverables/ep05-voice-clone-full.mp4` — 70.6 s, 1080×1920, 30 fps, VO + SFX + captions, FishyFiles end card from 65.9 s, about −14.2 LUFS
+- `deliverables/ep05-voice-clone-preview-10s.mp4` — first 10 s
+
+The supplied VO runs 70.2 s; the edit follows it as recorded.
 
 ## Why this one
 - It hits hardest emotionally: the victim hears their own child crying for help. That makes for a very strong hook and very shareable content (every parent forwards it).
@@ -56,4 +60,12 @@
 13. **FishyFiles end card** (`lib/cta.js`) over the follow line.
 
 ## Build
-Same pipeline as Episode 04 (`build.sh preview|full|stills`, `lib/doll.js`, `lib/cta.js`); added once the VO arrives.
+Requires Node 20+ and ffmpeg; `npm install` once at the repo root.
+```sh
+episodes/05-voice-clone/build.sh full           # -> deliverables/ep05-voice-clone-full.mp4 (~4 min)
+episodes/05-voice-clone/build.sh preview        # -> first 10 s
+episodes/05-voice-clone/build.sh stills 90,900  # -> anim/out/*.png
+```
+- `anim/ep05.js` — Mehta ji, Kabir, the AI copier, living room + hostel, phone screens, shots, captions; end card from `lib/cta.js`
+- `anim/sfx.js` — synthesised SFX cues for this VO
+- `audio/vo.wav` — supplied voiceover
