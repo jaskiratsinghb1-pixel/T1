@@ -7,6 +7,7 @@ Faceless 9:16 YouTube Shorts for an Indian audience, animated frame by frame in 
 - `episodes/03-digital-arrest/` — "digital arrest" video-call scam (complete)
 - `episodes/04-challan-apk/` — fake e-challan APK (complete, with the FishyFiles end card)
 - `episodes/05-voice-clone/` — AI voice-clone "Papa, mujhe bachao" call (complete)
+- `episodes/06-task-scam/` — "like karo, paise kamao" Telegram task scam (concept + script, awaiting VO)
 - `lib/cta.js` — FishyFiles end card (logo, tagline, follow pill), appended to every episode from 04; `lib/brand/` holds the logo
 
 Setup: Node 20+, ffmpeg, then `npm install` at the repo root. Each episode folder has its own README and build command.
